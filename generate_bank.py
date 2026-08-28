@@ -28,6 +28,9 @@ import datetime
 Q = []
 
 def add(id, cat, type, exams, diff, q, opts, answer, exp, ref=None, q_en=None, opts_en=None):
+    # 多选题答案统一规范为字母列表，避免前端 join/slice 报错中断渲染
+    if type == "multiple" and isinstance(answer, str):
+        answer = list(answer)
     Q.append({
         "id": id, "cat": cat, "type": type, "exams": exams, "diff": diff,
         "q": q, "opts": opts, "answer": answer, "exp": exp, "ref": ref,
@@ -1487,9 +1490,7 @@ function render(){
     }
     html+='<button class="ansbtn" onclick="reveal('+idx+')">显示答案</button>';
     let expHtml='<div class="exp" id="exp'+idx+'">';
-    let ansText;
-    if(q.type==='multiple') ansText=q.answer.join('、');
-    else ansText=q.answer;
+    const ansText = Array.isArray(q.answer)? q.answer.join('、') : q.answer;
     expHtml+='<div><b>答案：</b>'+escapeHtml(ansText)+'</div>';
     expHtml+='<div style="margin-top:6px"><b>解析：</b>'+escapeHtml(q.exp)+'</div>';
     expHtml+='<div class="ref">参考：'+escapeHtml(q.ref||'')+'</div>';
@@ -1501,7 +1502,7 @@ function render(){
   document.getElementById('stat').textContent='当前显示 '+shown+' 题（共 '+DATA.length+' 题）';
 }
 function correctLetters(q){
-  if(q.type==='multiple') return q.answer.slice();
+  if(q.type==='multiple') return Array.isArray(q.answer)? q.answer.slice() : String(q.answer).split('');
   if(q.type==='judge') return [ q.answer==='对'?'A':'B' ];
   return [q.answer];
 }
